@@ -278,6 +278,15 @@ options.Add(
 	"",
 )
 
+options.Add(
+	BoolVariable( "NO_DOCS", "Don't build documentation", False )
+)
+
+options.Add(
+	BoolVariable( "NO_GRAPHICS", "Don't create graphics", False )
+)
+
+
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this.
 ###############################################################################################
@@ -364,13 +373,17 @@ def findOnPath( file, path ) :
 	return None
 
 def checkInkscape(context):
+	if context.sconf.env["NO_GRAPHICS"]:
+		context.sconf.env["INKSCAPE"] = "disableGraphics"
+		return False
 	context.Message('Checking for Inkscape... ')
 	result = bool( findOnPath( context.sconf.env['INKSCAPE'], os.environ["PATH"] ) )
 	context.Result(result)
 	return result
 
 def checkSphinx( context ) :
-
+	if context.sconf.env["NO_DOCS"]:
+		return False
 	context.Message( "Checking for Sphinx..." )
 	result = bool( findOnPath( context.sconf.env["SPHINX"], context.sconf.env["ENV"]["PATH"] ) )
 	context.Result( result )
