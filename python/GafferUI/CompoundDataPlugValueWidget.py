@@ -123,6 +123,14 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/Add/Color3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( IECore.Color3f( 0 ) ) ) } )
 		result.append( "/Add/Color4f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( IECore.Color4f( 0, 0, 0, 1 ) ) ) } )
+		result.append( "/Add/ColorDivider", { "divider" : True } )
+
+		result.append( "/Add/Array/Bool", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.BoolVectorData() ) } )
+		result.append( "/Add/Array/Float", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.FloatVectorData() ) } )
+		result.append( "/Add/Array/Int", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.IntVectorData() ) } )
+		result.append( "/Add/Array/NumericDivider", { "divider" : True } )
+
+		result.append( "/Add/Array/String", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.StringVectorData() ) } )
 
 		return result
 

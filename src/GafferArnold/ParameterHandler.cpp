@@ -45,6 +45,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferArnold/ParameterHandler.h"
 
@@ -229,6 +230,175 @@ Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffe
 	replacePlug( plugParent, plug );
 
 	return plug.get();
+}
+
+template<typename PlugType>
+Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, const typename PlugType::ValueType *defaultValue )
+{
+	PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
+	if(
+		existingPlug &&
+		existingPlug->direction() == direction &&
+		existingPlug->defaultValue() == defaultValue
+	)
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( parameterName, direction, defaultValue );
+	plug->setFlags( Plug::Dynamic, true );
+
+	replacePlug( plugParent, plug );
+
+	return plug.get();
+}
+
+
+Gaffer::Plug *setupVectorPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction)
+{
+	Plug *plug = NULL;
+	const IECore::InternedString &parameterName = AiParamGetName( parameter );
+	AtArray *array = AiParamGetDefault( parameter )->ARRAY;
+
+	switch (array->type)
+	{
+		case AI_TYPE_BYTE :
+		{
+			std::vector<int> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( (int)AiArrayGetByte( array, i ) );
+			}
+
+			plug = setupTypedPlug<IntVectorDataPlug>( parameterName, plugParent, direction, new IntVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_INT :
+		{
+			std::vector<int> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( AiArrayGetInt( array, i ) );
+			}
+
+			plug = setupTypedPlug<IntVectorDataPlug>( parameterName, plugParent, direction, new IntVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_UINT :
+		{
+			std::vector<int> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( (int)AiArrayGetUInt( array, i ) );
+			}
+
+			plug = setupTypedPlug<IntVectorDataPlug>( parameterName, plugParent, direction, new IntVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_BOOLEAN :
+		{
+			std::vector<bool> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( AiArrayGetBool( array, i ) );
+			}
+
+			plug = setupTypedPlug<BoolVectorDataPlug>( parameterName, plugParent, direction, new BoolVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_FLOAT :
+		{
+			std::vector<float> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( (int)AiArrayGetFlt( array, i ) );
+			}
+
+			plug = setupTypedPlug<FloatVectorDataPlug>( parameterName, plugParent, direction, new FloatVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_RGB :
+		{
+			std::vector<V3f> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				AtRGB rgb = AiArrayGetRGB( array, i );
+				valueVector.push_back( V3f( rgb.r, rgb.g, rgb.b ) );
+			}
+
+			plug = setupTypedPlug<V3fVectorDataPlug>( parameterName, plugParent, direction, new V3fVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_RGBA :
+		{
+			std::vector<V3f> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				AtRGBA rgba = AiArrayGetRGBA( array, i );
+				valueVector.push_back( V3f( rgba.r, rgba.g, rgba.b ) );
+			}
+
+			plug = setupTypedPlug<V3fVectorDataPlug>( parameterName, plugParent, direction, new V3fVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_VECTOR :
+		{
+			std::vector<V3f> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				AtVector vec = AiArrayGetVec( array, i );
+				valueVector.push_back( C3f( vec.x, vec.y, vec.z ) );
+			}
+
+			plug = setupTypedPlug<V3fVectorDataPlug>( parameterName, plugParent, direction, new V3fVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_POINT :
+		{
+			std::vector<V3f> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				AtPoint pnt = AiArrayGetPnt( array, i );
+				valueVector.push_back( C3f( pnt.x, pnt.y, pnt.z ) );
+			}
+
+			plug = setupTypedPlug<V3fVectorDataPlug>( parameterName, plugParent, direction, new V3fVectorData( valueVector ) );
+
+			break;
+		}
+
+		case AI_TYPE_STRING :
+		{
+			std::vector<std::string> valueVector;
+			for ( AtUInt32 i = 0; i < array->nelements; i++ )
+			{
+				valueVector.push_back( AiArrayGetStr( array, i ) );
+			}
+
+			plug = setupTypedPlug<StringVectorDataPlug>( parameterName, plugParent, direction, new StringVectorData( valueVector ) );
+
+			break;
+		}
+
+	}
+
+	return plug;
 }
 
 template<typename PlugType>
@@ -487,6 +657,16 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				plugParent,
 				direction,
 				M44f( *AiParamGetDefault( parameter )->pMTX )
+			);
+			break;
+
+		case AI_TYPE_ARRAY :
+
+			plug = setupVectorPlug(
+				node,
+				parameter,
+				plugParent,
+				direction
 			);
 			break;
 
