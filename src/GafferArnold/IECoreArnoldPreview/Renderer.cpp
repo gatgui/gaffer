@@ -420,13 +420,14 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
-				if( !boost::starts_with( it->first.string(), "user:" ) )
+				std::string s = it->first.string();
+				if( !boost::starts_with( s, "ai:" ) || std::count( s.begin(), s.end(), ':' ) != 1)
 				{
 					continue;
 				}
 				if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
 				{
-					m_user[it->first] = data;
+					m_aiAttrs[s.substr(3)] = data;
 				}
 			}
 		}
@@ -542,19 +543,16 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
 				const char *name = AiUserParamGetName( param );
-				if( boost::starts_with( name, "user:" ) )
+				if( m_aiAttrs.find( name ) == m_aiAttrs.end() )
 				{
-					if( m_user.find( name ) == m_user.end() )
-					{
-						AiNodeResetParameter( node, name );
-					}
+					AiNodeResetParameter( node, name );
 				}
 			}
 			AiUserParamIteratorDestroy( it );
 
 			// Add user parameters we do want.
 
-			for( ArnoldAttributes::UserAttributes::const_iterator it = m_user.begin(), eIt = m_user.end(); it != eIt; ++it )
+			for( ArnoldAttributes::AiAttributes::const_iterator it = m_aiAttrs.begin(), eIt = m_aiAttrs.end(); it != eIt; ++it )
 			{
 				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
 			}
@@ -835,8 +833,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Displacement m_displacement;
 		Curves m_curves;
 
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
-		UserAttributes m_user;
+		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> AiAttributes;
+		AiAttributes m_aiAttrs;
 
 };
 
@@ -1333,29 +1331,13 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
-				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
-				if( parameter )
-				{
-					if( value )
-					{
-						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
-					}
-					else
-					{
-						AiNodeResetParameter( options, name.c_str() + 3 );
-					}
-					return;
-				}
-			}
-			else if( boost::starts_with( name.c_str(), "user:" ) )
-			{
 				if( value )
 				{
-					ParameterAlgo::setParameter( options, name.c_str(), value );
+					ParameterAlgo::setParameter( options, name.c_str() + 3, value );
 				}
 				else
 				{
-					AiNodeResetParameter( options, name.c_str() );
+					AiNodeResetParameter( options, name.c_str() + 3 );
 				}
 				return;
 			}
