@@ -73,8 +73,13 @@ def __shadingSummary( plug ) :
 def __subdivisionSummary( plug ) :
 
 	info = []
-	if plug["subdividePolygons"]["enabled"].getValue() :
-		info.append( "Subdivide Polygons " + ( "On" if plug["subdividePolygons"]["value"].getValue() else "Off" ) )
+	if plug["subdivType"]["enabled"].getValue() :
+		subdiv_type = plug["subdivType"]["value"].getValue()
+		if subdiv_type == "none":
+			info.append( "Subdivide Polygons Off" )
+		else:
+			info.append( "Subdivide Polygons On" )
+			info.append( "%s Type" % ( string.capwords( plug["subdivType"]["value"].getValue() ) ) )
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivAdaptiveError"]["enabled"].getValue() :
@@ -83,7 +88,16 @@ def __subdivisionSummary( plug ) :
 		info.append( string.capwords( plug["subdivAdaptiveMetric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
 	if plug["subdivAdaptiveSpace"]["enabled"].getValue() :
 		info.append( string.capwords( plug["subdivAdaptiveSpace"]["value"].getValue() ) + " Space" )
+	if plug["subdivUVSmoothing"]["enabled"].getValue() :
+		info.append( "%s UV Smoothing" % ( string.capwords(plug["subdivUVSmoothing"]["value"].getValue().replace( "_", " " ) ) ) )
 
+	return ", ".join( info )
+
+def __polymeshSummary( plug ):
+
+	info = []
+	if plug["smoothing"]["enabled"].getValue() :
+		info.append( "Smoothing %s" % ( "On" if plug["smoothing"]["value"].getValue() else "Off" ) )
 	return ", ".join( info )
 
 def __curvesSummary( plug ) :
@@ -122,6 +136,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
+			"layout:section:Polymesh:summary", __polymeshSummary,
 			"layout:section:Curves:summary", __curvesSummary,
 			"layout:section:Volume:summary", __volumeSummary,
 
@@ -261,21 +276,27 @@ Gaffer.Metadata.registerNode(
 
 		# Subdivision
 
-		"attributes.subdividePolygons" : [
+		"attributes.subdivType" : [
 
 			"description",
 			"""
 			Causes polygon meshes to be rendered with Arnold's
-			subdiv_type parameter set to "linear" rather than
+			subdiv_type parameter set to "linear" or "catclark" rather than
 			"none". This can be used to increase detail when
 			using polygons with displacement shaders and/or mesh
 			lights.
+			Linear subdivision puts vertices in the middle of each face.
+			The Catmull-Clark algorithm is used to create
+			smooth surfaces by recursive subdivision surface modeling.
+			The resulting surface will always consist
+			of a mesh of quadrilateral faces.
 			""",
 
 			"layout:section", "Subdivision",
-			"label", "Subdivide Polygons",
+			"label", "Type",
 
 		],
+
 
 		"attributes.subdivType.value" : [
 
@@ -392,6 +413,50 @@ Gaffer.Metadata.registerNode(
 			"preset:Object", "object",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.subdivUVSmoothing" : [
+
+			"description",
+			"""
+			The face-varying "limit" dPdu and dPdv vectors computed
+			during subdivision are stored and used for shading
+			instead of computing face-constant dPdu and dPdv
+			vectors on the fly during shading.
+			This can be useful for anisotropic shaders
+			but has a storage cost.
+
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "UV Smoothing",
+
+		],
+
+
+		"attributes.subdivUVSmoothing.value" : [
+
+			"preset:Pin Corners", "pin_corners",
+			"preset:Pin Borders", "pin_borders",
+			"preset:Linear", "linear",
+			"preset:Smooth", "smooth",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		# Polymesh
+
+		"attributes.smoothing" : [
+
+			"description",
+			"""
+			This boolean defines if the normals will be faceted or smooth.
+			""",
+
+			"layout:section", "Polymesh",
+			"label", "Smoothing",
 
 		],
 

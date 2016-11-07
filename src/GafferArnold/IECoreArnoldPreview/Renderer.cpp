@@ -363,11 +363,13 @@ IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
 IECore::InternedString g_arnoldOpaqueAttributeName( "ai:opaque" );
 IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
+IECore::InternedString g_polyMeshSmoothingAttributeName("ai:polymesh:smoothing");
+IECore::InternedString g_polyMeshSubdivTypeAttributeName("ai:polymesh:subdiv_type");
 IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:subdiv_iterations" );
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
-IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdividePolygons" );
+IECore::InternedString g_polyMeshSubdivUVSmoothingAttributeName("ai:polymesh:subdiv_uv_smoothing");
 IECore::InternedString g_objectSpace( "object" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
@@ -618,38 +620,45 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
 				subdivAdaptiveMetric = attributeValue<string>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes, "auto" );
 				subdivAdaptiveSpace = attributeValue<string>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes, "raster" );
-				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
+				subdivType = attributeValue<string>( g_polyMeshSubdivTypeAttributeName, attributes, "none" );
+				subdivUVSmoothing = attributeValue<string>( g_polyMeshSubdivUVSmoothingAttributeName, attributes, "pin_corners" );
+				smoothing = attributeValue<bool>( g_polyMeshSmoothingAttributeName, attributes, false );
 			}
 
 			int subdivIterations;
 			float subdivAdaptiveError;
 			IECore::InternedString subdivAdaptiveMetric;
 			IECore::InternedString subdivAdaptiveSpace;
-			bool subdividePolygons;
+			IECore::InternedString subdivType;
+			IECore::InternedString subdivUVSmoothing;
+			bool smoothing;
 
 			void hash( bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
 			{
-				if( !meshInterpolationIsLinear || subdividePolygons )
+				h.append( smoothing );
+				h.append( subdivType );
+				if( subdivType != "none" )
 				{
 					h.append( subdivIterations );
 					h.append( subdivAdaptiveError );
 					h.append( subdivAdaptiveMetric );
 					h.append( subdivAdaptiveSpace );
+					h.append( subdivUVSmoothing );
 				}
 			}
 
 			void apply( const IECore::MeshPrimitive *mesh, AtNode *node ) const
 			{
-				if( mesh->interpolation() != "linear" || subdividePolygons )
+				AiNodeSetBool( node, "smoothing", smoothing );
+				AiNodeSetStr( node, "subdiv_type", subdivType.c_str() );
+
+				if( subdivType != "none" )
 				{
 					AiNodeSetByte( node, "subdiv_iterations", subdivIterations );
 					AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
 					AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
 					AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
-					if( mesh->interpolation() == "linear" )
-					{
-						AiNodeSetStr( node, "subdiv_type", "linear" );
-					}
+					AiNodeSetStr( node, "subdiv_uv_smoothing", subdivUVSmoothing.c_str() );
 				}
 			}
 
