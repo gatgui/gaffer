@@ -379,6 +379,8 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 
+IECore::InternedString g_useOriginalGeometryAttributeName( "use_original_geometry" );
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -430,6 +432,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					m_aiAttrs[s.substr(3)] = data;
 				}
 			}
+
+			m_useOriginalGeometry = attributeValue<bool>( g_useOriginalGeometryAttributeName, attributes, false );
+
 		}
 
 		// Some attributes affect the geometric properties of a node, which means they
@@ -466,6 +471,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// will be applied in `applyGeometry()`.
 		bool canInstanceGeometry( const IECore::Object *object ) const
 		{
+			if ( m_useOriginalGeometry )
+			{
+				return false;
+			}
+
 			if( !IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
 			{
 				return false;
@@ -832,6 +842,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;
+		bool m_useOriginalGeometry;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> AiAttributes;
 		AiAttributes m_aiAttrs;
