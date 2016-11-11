@@ -419,9 +419,9 @@ commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( ":".join( split( commandEnv[
 
 def runCommand( command ) :
 
-	command = commandEnv.subst( command )
-	sys.stderr.write( command + "\n" )
-	subprocess.check_call( command, shell=True, env=commandEnv["ENV"] )
+	command = map( commandEnv.subst( x ), command )
+	sys.stderr.write( " ".join( command ) + "\n" )
+	subprocess.check_call( command, env=commandEnv["ENV"] )
 
 ###############################################################################################
 # Determine python version
@@ -957,10 +957,17 @@ for libraryName, libraryDef in libraries.items() :
 
 	# osl shaders
 
+	def CompileOSL( target, source, env ):
+		cmd = [ "oslc", "-I./shaders", "-o", str( target[0] ), str( source[0] ) ]
+		subprocess.check_call( cmd, env=env["ENV"] )
+		return 0
+
+	commandEnv["BUILDERS"]["CompileOSL"] = Builder(action=CompileOSL, suffix='.oso', src_suffix='.osl')
+
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -I./shaders -o $TARGET $SOURCE" )
+		compiledFile = commandEnv.CompileOSL( os.path.splitext( "$BUILD_DIR/" + oslShader )[0], oslShader )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 
@@ -1133,7 +1140,10 @@ else :
 
 def installer( target, source, env ) :
 
-	shutil.copytree( str( source[0] ), str( target[0] ), symlinks=True )
+	dst = str( target[0] )
+	if os.path.exists( dst ):
+		shutil.rmtree( dst )
+	shutil.copytree( str( source[0] ), dst, symlinks=True )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 
@@ -1174,9 +1184,9 @@ def packager( target, source, env ) :
 	d = os.path.dirname( source )
 
 	if target.endswith( ".dmg" ) :
-		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )
+		runCommand( ["hdiutil", "create", "-volname", os.path.basename( target ), "-srcfolder", source, "-ov", "-format", "UDZO", target ] )
 	else :
-		runCommand( "tar -czf %s -C %s %s" % ( target, d, b ) )
+		runCommand( ["tar", "-czf", target, "-C", d, b] )
 
 package = env.Command( "$PACKAGE_FILE", "$INSTALL_DIR", packager )
 env.NoCache( package )
