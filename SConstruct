@@ -725,7 +725,7 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
+			"LIBS" : [ "GafferDispatch", "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
@@ -895,6 +895,7 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 
+	bindingsLibrary = None
 	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :
 
@@ -919,10 +920,14 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
 			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
+		if libraryName == "GafferAppleseed":
+			pythonModuleEnv.Append( LIBS = [ "GafferDispatch" ] )
 		pythonModuleEnv["SHLIBPREFIX"] = ""
 		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
+		if bindingsLibrary:
+			pythonModuleEnv.Depends( pythonModule, bindingsLibrary )
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )

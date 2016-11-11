@@ -1,0 +1,15 @@
+--- a/gcc-atomic.hpp	2016-11-11 18:34:34.000000000 +0900
++++ b/gcc-atomic.hpp	2016-10-10 20:36:28.000000000 +0900
+@@ -932,6 +932,12 @@
+ struct BOOST_ALIGNMENT(16) storage128_type
+ {
+     uint64_t data[2];
++    
++    inline storage128_type(int val)
++    {
++        data[0] = (uint64_t) val;
++        data[1] = 0;
++    }
+ };
+ 
+ inline bool operator== (storage128_type const& left, storage128_type const& right)
