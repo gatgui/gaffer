@@ -730,7 +730,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed", "GafferDispatch" ],
 		},
 		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
@@ -844,6 +844,20 @@ for library in ( "GafferUI", ) :
 # The stuff that actually builds the libraries and python modules
 ###############################################################################################
 
+targets = {}
+unresolvedDeps = {}
+
+def addTarget( env, name, target ): #, envDict ):
+	targets[name] = target
+	for depLibraryName in env.get( "LIBS", [] ):
+		depTarget = targets.get( depLibraryName, None )
+		if depTarget:
+			env.Depends( target, depTarget )
+		elif re.sub("Bindings$", "", depLibraryName) in libraries:
+			_, depList = unresolvedDeps.get( name, ( None, [] ) )
+			depList.append( depLibraryName )
+			unresolvedDeps[name] = ( env, depList )
+
 for libraryName, libraryDef in libraries.items() :
 
 	# skip this library if we don't have the config we need
@@ -867,6 +881,7 @@ for libraryName, libraryDef in libraries.items() :
 	if librarySource :
 
 		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
+		addTarget( libEnv, libraryName, library )
 		libEnv.Default( library )
 
 		libraryInstall = libEnv.Install( "$BUILD_DIR/lib", library )
@@ -900,6 +915,7 @@ for libraryName, libraryDef in libraries.items() :
 	if bindingsSource :
 
 		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
+		addTarget( pythonEnv, libraryName + "Bindings", bindingsLibrary )
 		pythonEnv.Default( bindingsLibrary )
 
 		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
@@ -920,14 +936,11 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
 			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
-		if libraryName == "GafferAppleseed":
-			pythonModuleEnv.Append( LIBS = [ "GafferDispatch" ] )
 		pythonModuleEnv["SHLIBPREFIX"] = ""
 		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
-		if bindingsLibrary:
-			pythonModuleEnv.Depends( pythonModule, bindingsLibrary )
+		addTarget( pythonModuleEnv, libraryName + "Module", pythonModule )
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
@@ -993,6 +1006,16 @@ for libraryName, libraryDef in libraries.items() :
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
 		stubEnv.Alias( "build", stub )
+
+for libraryName, envListTuple in unresolvedDeps.iteritems():
+	libraryTarget = targets.get( libraryName, None )
+	if not libraryTarget:
+		continue
+	env, depList = envListTuple
+	for depLibraryName in depList:
+		depTarget = targets.get( depLibraryName, None )
+		if depTarget:
+			env.Depends( libraryTarget, depTarget )
 
 #########################################################################################################
 # Graphics
