@@ -41,6 +41,7 @@ import sys
 import glob
 import shutil
 import fnmatch
+import platform
 import py_compile
 import subprocess
 
@@ -49,7 +50,7 @@ import subprocess
 ###############################################################################################
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
-gafferMajorVersion = 29 # backwards-incompatible changes
+gafferMajorVersion = 30 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
 
@@ -322,6 +323,11 @@ if env["PLATFORM"] == "darwin" :
 	env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
 	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
 	env["GAFFER_PLATFORM"] = "osx"
+
+	osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
+	if osxVersion[0] == 10 and osxVersion[1] > 7 :
+		# Fix problems with Boost 1.55 and recent versions of Clang.
+		env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128", "-Wno-unused-local-typedef" ] )
 
 elif env["PLATFORM"] == "posix" :
 
@@ -725,12 +731,12 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "GafferDispatch", "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed", "GafferDispatch" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
 		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
@@ -936,8 +942,20 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
 			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
+
 		pythonModuleEnv["SHLIBPREFIX"] = ""
-		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
+		if pythonModuleEnv["PLATFORM"] == "darwin" :
+			# On OSX, we must build Python modules with the ".so"
+			# prefix rather than the ".dylib" you might expect.
+			# This is done by changing the SHLIBSUFFIX variable.
+			# But this causes a problem with SCons' automatic
+			# scanning for the library dependencies of those modules,
+			# because by default it expects the libraries to end in
+			# "$SHLIBSUFFIX". So we must also explicitly add
+			# the original value of SHLIBSUFFIX (.dylib) to the
+			# LIBSUFFIXES variable used by the library scanner.
+			pythonModuleEnv["LIBSUFFIXES"].append( pythonModuleEnv.subst( "$SHLIBSUFFIX" ) )
+			pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
 		addTarget( pythonModuleEnv, libraryName + "Module", pythonModule )
@@ -970,17 +988,14 @@ for libraryName, libraryDef in libraries.items() :
 
 	# osl shaders
 
-	def CompileOSL( target, source, env ):
-		cmd = [ "oslc", "-I./shaders", "-o", str( target[0] ), str( source[0] ) ]
-		subprocess.check_call( cmd, env=env["ENV"] )
-		return 0
+	def buildOSL( target, source, env ) :
 
-	commandEnv["BUILDERS"]["CompileOSL"] = Builder(action=CompileOSL, suffix='.oso', src_suffix='.osl')
+		subprocess.check_call( [ "oslc", "-I./shaders", "-o", str( target[0] ), str( source[0] ) ], env = env["ENV"] )
 
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.CompileOSL( os.path.splitext( "$BUILD_DIR/" + oslShader )[0], oslShader )
+		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 

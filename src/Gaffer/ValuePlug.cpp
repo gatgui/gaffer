@@ -265,6 +265,11 @@ class ValuePlug::ComputeProcess : public Process
 			return g_cache.currentCost();
 		}
 
+		static void clearCache()
+		{
+			g_cache.clear();
+		}
+
 		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
 		{
 			const ValuePlug *p = sourcePlug( plug );
@@ -394,7 +399,7 @@ class ValuePlug::ComputeProcess : public Process
 };
 
 const IECore::InternedString ValuePlug::ComputeProcess::staticType( "computeNode:compute" );
-ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( nullGetter, 1024 * 1024 * 500 );
+ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( nullGetter, 1024 * 1024 * 1024 * 1 ); // 1 gig
 
 //////////////////////////////////////////////////////////////////////////
 // SetValueAction implementation
@@ -793,4 +798,9 @@ void ValuePlug::setCacheMemoryLimit( size_t bytes )
 size_t ValuePlug::cacheMemoryUsage()
 {
 	return ComputeProcess::cacheMemoryUsage();
+}
+
+void ValuePlug::clearCache()
+{
+	ComputeProcess::clearCache();
 }

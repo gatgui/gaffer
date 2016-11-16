@@ -125,7 +125,8 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Export for referencing...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/Export reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/Import reference...", { "command" : functools.partial( __importReference, node = node ) } )
 
 def __showContents( nodeGraph, box ) :
 
@@ -138,7 +139,7 @@ def __exportForReferencing( menu, node ) :
 	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export reference", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 	if not path :
@@ -149,6 +150,29 @@ def __exportForReferencing( menu, node ) :
 		path += ".grf"
 
 	node.exportForReference( path )
+
+def __importReference( menu, node ) :
+
+	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
+
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
+
+	window = menu.ancestor( GafferUI.Window )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Import reference", confirmLabel="Import", leaf=True, valid=True, bookmarks=bookmarks )
+	path = dialogue.waitForPath( parentWindow = window )
+
+	if not path :
+		return
+
+	scriptNode = node.ancestor( Gaffer.ScriptNode )
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Importing Reference",
+		closeLabel = "Oy vey",
+		parentWindow = window
+	) :
+		with Gaffer.UndoContext( scriptNode ) :
+			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
 
 # PlugValueWidget registrations
 ##########################################################################
@@ -324,7 +348,7 @@ def __renamePlug( menu, plug ) :
 def __setPlugMetadata( plug, key, value ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerPlugValue( plug, key, value )
+		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __edgePlugs( nodeGraph, plug ) :
 
@@ -338,17 +362,24 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 	plugs.insert( newIndex, plug )
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		for index, plug in enumerate( plugs ) :
-			Gaffer.Metadata.registerPlugValue( plug, "nodeGadget:noduleIndex", index )
+			Gaffer.Metadata.registerValue( plug, "nodeGadget:noduleIndex", index )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
+	readOnly = Gaffer.readOnly( plug )
 	if isinstance( plug.node(), Gaffer.Box ) :
 
-		menuDefinition.append( "/Rename...", { "command" : functools.partial( __renamePlug, plug = plug ) } )
+		menuDefinition.append(
+			"/Rename...",
+			{
+				"command" : functools.partial( __renamePlug, plug = plug ),
+				"active" : not readOnly,
+			}
+		)
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
-		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		currentEdge = Gaffer.Metadata.value( plug, "nodeGadget:nodulePosition" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 
@@ -357,7 +388,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 				"/Move To/" + edge.capitalize(),
 				{
 					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
-					"active" : edge != currentEdge,
+					"active" : edge != currentEdge and not readOnly,
 				}
 			)
 
@@ -367,7 +398,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
 			{
 				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex - 1 ),
-				"active" : edgeIndex > 0,
+				"active" : edgeIndex > 0 and not readOnly,
 			}
 		)
 
@@ -375,11 +406,11 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			"/Move " + ( "Down" if currentEdge in ( "left", "right" ) else "Right" ),
 			{
 				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex + 1 ),
-				"active" : edgeIndex < len( edgePlugs ) - 1,
+				"active" : edgeIndex < len( edgePlugs ) - 1 and not readOnly,
 			}
 		)
 
-	__appendPlugDeletionMenuItems( menuDefinition, plug )
-	__appendPlugPromotionMenuItems( menuDefinition, plug )
+	__appendPlugDeletionMenuItems( menuDefinition, plug, readOnly )
+	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )

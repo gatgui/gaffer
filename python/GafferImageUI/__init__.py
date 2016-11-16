@@ -43,7 +43,7 @@ from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import OpenImageIOReaderUI
 import ImageReaderUI
-import ImageViewToolbar
+import ImageViewUI
 import ImageTransformUI
 import ConstantUI
 import ImageSwitchUI
@@ -80,5 +80,6 @@ import ShapeUI
 import TextUI
 import WarpUI
 import UVWarpUI
+import MirrorUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )

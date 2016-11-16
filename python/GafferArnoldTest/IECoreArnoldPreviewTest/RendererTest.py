@@ -74,7 +74,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -105,7 +105,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -143,7 +143,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
@@ -173,7 +173,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			# We only want one shader to have been saved, because only one was genuinely used.
@@ -220,7 +220,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -274,7 +274,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" ) )
@@ -317,7 +317,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -354,7 +354,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -402,7 +402,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -463,7 +463,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -517,7 +517,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			filters = self.__allNodes( type = arnold.AI_NODE_FILTER )
@@ -591,7 +591,7 @@ class RendererTest( GafferTest.TestCase ) :
 		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -653,7 +653,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			node = arnold.AiNodeLookUpByName( "plane" )
@@ -702,7 +702,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -762,7 +762,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -825,7 +825,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -865,7 +865,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -917,7 +917,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -999,7 +999,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1053,7 +1053,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1097,7 +1097,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1169,7 +1169,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1284,6 +1284,156 @@ class RendererTest( GafferTest.TestCase ) :
 		del defaultAttributes, defaultIterationsAttributes, nonDefaultIterationsAttributes, subdividePolygonsAttributes
 		del polygonMeshObject, subdivMeshObject
 		del r
+
+	def testStepSizeAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		primitives = {
+			"sphere" : IECore.SpherePrimitive(),
+			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
+			"volumeProcedural" : IECore.ExternalProcedural(
+				"volume_vdb.so",
+				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
+				IECore.CompoundData( {
+					"ai:nodeType" : "volume",
+				} )
+			),
+			"regularProcedural" : IECore.ExternalProcedural(
+				"test.so",
+				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
+			),
+		}
+
+		attributes = {
+			"default" : IECore.CompoundObject(),
+			"stepSizeZero" : IECore.CompoundObject( {
+				"ai:shape:step_size" : IECore.FloatData( 0 ),
+			} ),
+			"stepSizeOne" : IECore.CompoundObject( {
+				"ai:shape:step_size" : IECore.FloatData( 1 ),
+			} ),
+			"stepSizeTwo" : IECore.CompoundObject( {
+				"ai:shape:step_size" : IECore.FloatData( 2 ),
+			} )
+		}
+
+		for pn, p in primitives.items() :
+			for an, a in attributes.items() :
+				r.object( pn + "_" + an, p, r.attributes( a ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
+			numBoxes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "box" ] )
+			numSpheres = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "sphere" ] )
+			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
+			numVolumes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
+			numProcedurals = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "procedural" ] )
+
+			self.assertEqual( numInstances, 20 )
+			self.assertEqual( numMeshes, 1 )
+			self.assertEqual( numBoxes, 2 )
+			self.assertEqual( numSpheres, 3 )
+			self.assertEqual( numCurves, 1 )
+			self.assertEqual( numVolumes, 3 )
+			self.assertEqual( numProcedurals, 1 )
+
+			self.__assertInstanced(
+				"mesh_default",
+				"mesh_stepSizeZero",
+			)
+
+			self.__assertInstanced(
+				"sphere_default",
+				"sphere_stepSizeZero",
+			)
+
+			self.__assertInstanced(
+				"curves_default",
+				"curves_stepSizeZero",
+				"curves_stepSizeOne",
+				"curves_stepSizeTwo",
+			)
+
+			for pn in primitives.keys() :
+				for an, a in attributes.items() :
+
+					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
+					shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+
+					stepSize = a.get( "ai:shape:step_size" )
+					stepSize = stepSize.value if stepSize is not None else 0
+
+					if pn == "curves" :
+						self.assertTrue( arnold.AiNodeIs( shape, "curves" ) )
+					elif pn == "sphere" :
+						self.assertTrue( arnold.AiNodeIs( shape, "sphere" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
+					elif pn == "mesh" :
+						if stepSize == 0 :
+							self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
+						else :
+							self.assertTrue( arnold.AiNodeIs( shape, "box" ) )
+							self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
+					elif pn == "volumeProcedural" :
+						self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
+					elif pn == "regularProcedural" :
+						self.assertTrue( arnold.AiNodeIs( shape, "procedural" ) )
+
+	def testStepSizeAttributeDefersToProceduralParameter( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+
+			"test",
+
+			IECore.ExternalProcedural(
+				"volume_vdb.so",
+				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
+				IECore.CompoundData( {
+					"ai:nodeType" : "volume",
+					"step_size" : 0.25,
+				} )
+			),
+
+			r.attributes( IECore.CompoundObject( {
+				"ai:shape:step_size" : IECore.FloatData( 10.0 ),
+			} ) )
+
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			instance = arnold.AiNodeLookUpByName( "test" )
+			self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
+
+			shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+			self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
+			self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), 0.25 )
 
 	@staticmethod
 	def __m44f( m ) :
